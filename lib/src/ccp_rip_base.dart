@@ -1,70 +1,115 @@
-// TODO: Put public facing types in this file.
-
+/// A class to handle CCP (Compte Chèques Postaux) operations.
 class CCP {
-  String ccp;
+  /// The CCP number as a string.
+  final String ccp;
 
+  /// Creates a CCP instance.
+  ///
+  /// Example:
+  /// ```dart
+  /// var myCCP = CCP('002345678');
+  /// ```
   CCP(this.ccp);
 
-  String getCle() {
-    String x = ccp.padLeft(10, '0');
-    List<String> values = x.split('');
-    int cc = 0;
-    int z = 9;
+  /// Returns the check key (clé) of the CCP as a 2-digit string.
+  ///
+  /// Example:
+  /// ```dart
+  /// var cle = myCCP.cle; // "42"
+  /// ```
+  String get cle {
+    final padded = ccp.padLeft(10, '0');
+    final digits = padded.split('').map(int.parse).toList();
+    int total = 0;
+    int index = 9;
 
-    for (int i = 4; i < 14; i++) {
-      cc += int.parse(values[z]) * i;
-      z--;
+    for (int weight = 4; weight < 14; weight++) {
+      total += digits[index] * weight;
+      index--;
     }
 
-    return (cc % 100).toString().padLeft(2, '0');
+    return (total % 100).toString().padLeft(2, '0');
   }
 
+  /// Returns the full RIP string.
+  ///
+  /// Example:
+  /// ```dart
+  /// var fullRip = myCCP.rip; // full RIP string
+  /// ```
+  String get rip => _calculateRip();
+
+  /// Returns the RIP check key (last 2 digits) as a 2-character string.
+  ///
+  /// Example:
+  /// ```dart
+  /// var ripCle = myCCP.ripCle; // last 2 digits of RIP
+  /// ```
+  String get ripCle => rip.substring(rip.length - 2).padLeft(2, '0');
+
+  /// Internal method to calculate the full RIP string.
   String _calculateRip() {
-    int ccpInt = int.parse(ccp);
-    int remainder = (ccpInt * 100) % 97;
+    final ccpInt = int.parse(ccp);
+    final remainder = (ccpInt * 100) % 97;
 
-    int x;
+    int checkValue;
     if (remainder + 85 > 97) {
-      x = 97 - (remainder + 85 - 97);
+      checkValue = 97 - (remainder + 85 - 97);
     } else {
-      x = 97 - (remainder + 85);
+      checkValue = 97 - (remainder + 85);
     }
 
-    return "00799999${ccpInt.toString().padLeft(10, '0')}$x";
-  }
-
-  String getRip({bool onlyCle = false}) {
-    String rip = _calculateRip();
-    return onlyCle ? rip.substring(rip.length - 2) : rip;
-  }
-
-  String getRipCle() {
-    return getRip(onlyCle: true).padLeft(2, '0');
+    return "00799999${ccpInt.toString().padLeft(10, '0')}$checkValue";
   }
 }
 
+/// A class to calculate transaction fees for deposits and checkouts.
 class Transaction {
-  double amount;
+  /// Transaction amount in the local currency.
+  final double amount;
 
+  /// Creates a Transaction instance.
+  ///
+  /// Example:
+  /// ```dart
+  /// var t = Transaction(15000);
+  /// ```
   Transaction(this.amount);
 
-  double _calculateFees(String mode) {
-    if (mode == "transfer") {
-      return (amount / 5000).ceil() * 12 + 18;
-    } else if (mode == "checkout") {
-      int z = (amount / 1000).ceil();
-      if (amount <= 18000) {
-        return z * 2 + 18;
-      } else if (amount > 18000 && amount <= 1000000) {
-        return z * 3 + 18;
-      } else {
-        z = ((amount - 1000000) / 1000).ceil();
-        return z * 6 + 3018;
-      }
-    }
-    return 0;
-  }
+  /// Returns the fees for a deposit (transfer).
+  ///
+  /// Example:
+  /// ```dart
+  /// var depositFees = t.depositFees;
+  /// ```
+  double get depositFees => _calculateFees(TransactionType.transfer);
 
-  double getDepositFees() => _calculateFees("transfer");
-  double getCheckoutFees() => _calculateFees("checkout");
+  /// Returns the fees for a checkout.
+  ///
+  /// Example:
+  /// ```dart
+  /// var checkoutFees = t.checkoutFees;
+  /// ```
+  double get checkoutFees => _calculateFees(TransactionType.checkout);
+
+  /// Internal method to calculate fees based on transaction type.
+  double _calculateFees(TransactionType type) {
+    switch (type) {
+      case TransactionType.transfer:
+        return (amount / 5000).ceil() * 12 + 18;
+      case TransactionType.checkout:
+        int units = (amount / 1000).ceil();
+        if (amount <= 18000) {
+          return units * 2 + 18;
+        } else if (amount <= 1000000) {
+          return units * 3 + 18;
+        } else {
+          units = ((amount - 1000000) / 1000).ceil();
+          return units * 6 + 3018;
+        }
+    }
+  }
 }
+
+/// Transaction types for internal fee calculations.
+enum TransactionType { transfer, checkout }

@@ -1,14 +1,15 @@
 import 'package:ccp_rip/ccp_rip.dart';
 
-
 void main() {
-  CCP account = CCP("0023456789");
+  // THIS CCP NUMBER IS JUST A TEST NUMBER IN CODE, NOT FOR ANY USE
+  final account = CCP("0023456789");
 
-  print("CCP Key: ${account.getCle()}");       // -> 88
-  print("RIP: ${account.getRip()}");           // -> 007999990023456789
-  print("RIP Key: ${account.getRipCle()}");   // -> 41
+  // Access getters instead of methods
+  print("CCP Key: ${account.cle}"); // -> 88
+  print("RIP: ${account.rip}"); // -> full RIP string
+  print("RIP Key: ${account.ripCle}"); // -> last 2 digits
 
-  Transaction t = Transaction(25000);
-  print("Deposit Fees: ${t.getDepositFees()} DA");
-  print("Checkout Fees: ${t.getCheckoutFees()} DA");
+  final depositTransaction = Transaction(25000);
+  print("Deposit Fees: ${depositTransaction.depositFees} DA");
+  print("Checkout Fees: ${depositTransaction.checkoutFees} DA");
 }
