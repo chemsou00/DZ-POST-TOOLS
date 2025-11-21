@@ -1,7 +1,7 @@
 name: ccp_rip
 description: A Dart library to calculate CCP keys, RIP, and Algérie Poste fees
 version: 0.0.1
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/chemsou00/DZ-POST-TOOLS
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
